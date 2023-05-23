@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: "AWS::Serverless-2016-10-31"
+Description: sasha
+
+Parameters:
+  # ScheduleExpression:
+  #   Description: schedule expression for the eventbridge event
+  #   Type: String
+  #   Default: rate(6 hours)
+  DaysToRetainLogs:
+    Description: days to retain logs in CloudWatch
+    Type: Number
+    Default: 30
+
+Resources:
+  RequestsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-requests
+      ContentUri: layer/requests/
+      CompatibleRuntimes:
+        - python3.10
+    Metadata:
+      BuildMethod: python3.10
+
+  SelectolaxLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-selectolax
+      ContentUri: layer/selectolax/
+      CompatibleRuntimes:
+        - python3.10
+    Metadata:
+      BuildMethod: python3.10
+    
+  SashaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: function/sasha
+      Description: ""
+      Handler: index.lambda_handler
+      Runtime: python3.10
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 900
+      # Policies:
+      #   - AmazonS3FullAccess
+      # Environment:
+      #   Variables:
+      #     BUCKET_NAME: !Ref ImageBucketName
+      Layers:
+        - !Ref RequestsLayer
+        - !Ref SelectolaxLayer
+      # Events:
+      #   CloudWatchEvent:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: !Ref ScheduleExpression
+
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SashaFunction}
+      RetentionInDays: !Ref DaysToRetainLogs
