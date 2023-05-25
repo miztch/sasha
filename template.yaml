@@ -19,9 +19,9 @@ Resources:
       LayerName: sasha-requests
       ContentUri: layer/requests/
       CompatibleRuntimes:
-        - python3.10
+        - python3.9
     Metadata:
-      BuildMethod: python3.10
+      BuildMethod: python3.9
 
   SelectolaxLayer:
     Type: AWS::Serverless::LayerVersion
@@ -29,17 +29,17 @@ Resources:
       LayerName: sasha-selectolax
       ContentUri: layer/selectolax/
       CompatibleRuntimes:
-        - python3.10
+        - python3.9
     Metadata:
-      BuildMethod: python3.10
+      BuildMethod: python3.9
     
   SashaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: function/sasha
+      CodeUri: functions/sasha/
       Description: ""
       Handler: index.lambda_handler
-      Runtime: python3.10
+      Runtime: python3.9
       Architectures:
         - x86_64
       MemorySize: 128
