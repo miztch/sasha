@@ -10,7 +10,7 @@ from utils import headers
 def scrape_matches(page: str = 1):
     url = 'https://www.vlr.gg/matches?page={}'.format(page)
     resp = requests.get(url, headers=headers)
-    html = selectolax.parser.HTMLParser(resp.text)
+    html = HTMLParser(resp.text)
     status = resp.status_code
 
     results = []
@@ -86,7 +86,8 @@ def scrape_matches(page: str = 1):
 
     segments = {"status": status, "segments": results}
     data = {"data": segments}
-    if data['status'] != 200:
+
+    if status != 200:
         raise Exception("API response: {}".format(status))
 
     return data
@@ -94,6 +95,6 @@ def scrape_matches(page: str = 1):
 
 def lambda_handler(event, context):
 
-    data = scrape_matches(page)
+    data = scrape_matches()
 
     return data
