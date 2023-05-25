@@ -32,7 +32,17 @@ Resources:
         - python3.9
     Metadata:
       BuildMethod: python3.9
-    
+
+  PythonDateutilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-python-dateutil
+      ContentUri: layer/python-dateutil/
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+  
   SashaFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -52,6 +62,7 @@ Resources:
       Layers:
         - !Ref RequestsLayer
         - !Ref SelectolaxLayer
+        - !Ref PythonDateutilLayer
       # Events:
       #   CloudWatchEvent:
       #     Type: Schedule
