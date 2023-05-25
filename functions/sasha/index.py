@@ -17,6 +17,7 @@ def scrape_matches(page: str = 1):
 
     for item in html.css("a.wf-module-item"):
         url_path = item.attributes['href']
+        match_id = url_path.split("/")[1]
 
         eta = item.css_first(".match-item-eta").text().strip()
         eta = eta.replace("\t", " ").replace("\n", " ").split()
@@ -30,18 +31,10 @@ def scrape_matches(page: str = 1):
 
         rounds = item.css_first(".match-item-event-series").text().strip()
 
-        tourney = item.css_first(".match-item-event").text().strip()
-        tourney = tourney.replace("\t", " ")
-        tourney = tourney.strip().split("\n")[1]
-        tourney = tourney.strip()
-
-        tourney_icon_url = item.css_first("img").attributes['src']
-        tourney_icon_url = f"https:{tourney_icon_url}"
-
-        flag_list = [flag_parent.attributes["class"].replace(
-            " mod-", "_") for flag_parent in item.css('.flag')]
-        flag1 = flag_list[0]
-        flag2 = flag_list[1]
+        event_name = item.css_first(".match-item-event").text().strip()
+        event_name = event_name.replace("\t", " ")
+        event_name = event_name.strip().split("\n")[1]
+        event_name = event_name.strip()
 
         try:
             team_array = item.css_first(
@@ -54,33 +47,22 @@ def scrape_matches(page: str = 1):
             "                                  "
         )
 
-        team1 = "TBD"
-        team2 = "TBD"
+        team_home = "TBD"
+        team_away = "TBD"
 
         if team_array is not None and len(team_array) > 1:
-            team1 = team_array[0]
-            team2 = team_array[4].strip()
-
-        score1 = "-"
-        score2 = "-"
-
-        if team_array is not None and len(team_array) > 1:
-            score1 = team_array[1].replace(" ", "").strip()
-            score2 = team_array[-1].replace(" ", "").strip()
+            team_home = team_array[0]
+            team_away = team_array[4].strip()
 
         results.append(
             {
-                "team1": team1,
-                "team2": team2,
-                "flag1": flag1,
-                "flag2": flag2,
-                "score1": score1,
-                "score2": score2,
+                "id": match_id,
+                "team_home": team_home,
+                "team_away": team_away,
                 "time_until_match": eta,
-                "round_info": rounds,
-                "tournament_name": tourney,
-                "match_page": url_path,
-                "tournament_icon": tourney_icon_url,
+                "match_name": rounds,
+                "event_name": event_name,
+                "match_page": url_path
             }
         )
 
