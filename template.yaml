@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: "AWS::Serverless-2016-10-31"
+Description: sasha
+
+Parameters:
+  # ScheduleExpression:
+  #   Description: schedule expression for the eventbridge event
+  #   Type: String
+  #   Default: rate(6 hours)
+  DaysToRetainLogs:
+    Description: days to retain logs in CloudWatch
+    Type: Number
+    Default: 30
+
+Resources:
+  RequestsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-requests
+      ContentUri: layer/requests/
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+
+  SelectolaxLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-selectolax
+      ContentUri: layer/selectolax/
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+
+  PythonDateutilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sasha-python-dateutil
+      ContentUri: layer/python-dateutil/
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+  
+  SashaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/sasha/
+      Description: ""
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 900
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          VLR_MATCHES_TABLE: !Ref VlrMatchesTable
+      Layers:
+        - !Ref RequestsLayer
+        - !Ref SelectolaxLayer
+        - !Ref PythonDateutilLayer
+      # Events:
+      #   CloudWatchEvent:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: !Ref ScheduleExpression
+
+  VlrMatchesTable:
+    Type: AWS::DynamoDB::Table
+    # DeletionPolicy: Retain
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: N
+        - AttributeName: startTime
+          AttributeType: S
+      BillingMode: PROVISIONED
+      # DeletionProtectionEnabled: True
+      KeySchema: 
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: startTime
+          KeyType: RANGE
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SashaFunction}
+      RetentionInDays: !Ref DaysToRetainLogs
+
+Outputs:
+  VlrMatchesTableName:
+    Description: DynamoDB Table for match list
+    Value: !Ref VlrMatchesTable
