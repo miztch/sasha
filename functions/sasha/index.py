@@ -86,6 +86,7 @@ def scrape_match(match_url_path):
     start_time_est = parse(with_timezone, tzinfos=tzinfo)
     start_time_utc = start_time_est.astimezone(tz.gettz('Etc/GMT'))
     start_time_utc = datetime.strftime(start_time_utc, '%Y-%m-%dT%H:%M:%S%z')
+    start_date_utc = start_time_utc[:10]
 
     teams = html.css('.wf-title-med')
     teams = [t.text().replace('\t', '').replace('\n', '') for t in teams]
@@ -105,6 +106,7 @@ def scrape_match(match_url_path):
         'event_name': event_info['event_name'],
         'event_country_flag': event_info['country_flag'],
         'start_time': start_time_utc,
+        'start_date': start_date_utc,
         'best_of': best_of,
         'match_name': match_name,
         'teams': teams
@@ -134,6 +136,7 @@ def scrape_matches(page: str = 1):
                 'eventName': match_detail['event_name'],
                 'eventCountryFlag': match_detail['event_country_flag'],
                 'startTime': match_detail['start_time'],
+                'startDate': match_detail['start_date'],
                 'bestOf': match_detail['best_of'],
                 'matchName': match_detail['match_name'],
                 'teams': [{'title': team} for team in match_detail['teams']],
