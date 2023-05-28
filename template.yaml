@@ -3,14 +3,22 @@ Transform: "AWS::Serverless-2016-10-31"
 Description: sasha
 
 Parameters:
-  # ScheduleExpression:
-  #   Description: schedule expression for the eventbridge event
-  #   Type: String
-  #   Default: rate(6 hours)
+  ScheduleExpression:
+    Description: schedule expression for the eventbridge event
+    Type: String
+    Default: rate(6 hours)
   DaysToRetainLogs:
     Description: days to retain logs in CloudWatch
     Type: Number
     Default: 30
+  PagesToScrape:
+    Description: pages to scrape matches
+    Type: Number
+    Default: 5
+  BaseDelaySecondsOfSendMessage:
+    Description: the delay to use as a basis for the sqs.send_message
+    Type: Number
+    Default: 60
 
 Resources:
   RequestsLayer:
@@ -42,12 +50,12 @@ Resources:
         - python3.9
     Metadata:
       BuildMethod: python3.9
-  
+
   SashaFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/sasha/
-      Description: ""
+      Description: "scrape vlr.gg upcoming matches"
       Handler: index.lambda_handler
       Runtime: python3.9
       Architectures:
@@ -63,11 +71,44 @@ Resources:
         - !Ref RequestsLayer
         - !Ref SelectolaxLayer
         - !Ref PythonDateutilLayer
-      # Events:
-      #   CloudWatchEvent:
-      #     Type: Schedule
-      #     Properties:
-      #       Schedule: !Ref ScheduleExpression
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt FanoutQueue.Arn
+            BatchSize: 1
+            ScalingConfig:
+              MaximumConcurrency: 2
+
+  FanoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/fanout/
+      Description: "invoke sasha function via SQS queue publishing"
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 900
+      Policies:
+        - AmazonSQSFullAccess
+      Environment:
+        Variables:
+          FANOUT_QUEUE_URL: !Ref FanoutQueue
+          BASE_DELAY_SECONDS: !Ref BaseDelaySecondsOfSendMessage
+          PAGES_TO_SCRAPE: !Ref PagesToScrape
+      Events:
+        CloudWatchEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+
+  FanoutQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 10
+      VisibilityTimeout: 1000
 
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
@@ -89,7 +130,13 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
-  FunctionLogGroup:
+  FanoutFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FanoutFunction}
+      RetentionInDays: !Ref DaysToRetainLogs
+
+  SashaFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${SashaFunction}

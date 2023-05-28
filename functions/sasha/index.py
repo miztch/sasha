@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import re
@@ -163,10 +164,18 @@ def scrape_matches(page: str = 1):
 
 
 def lambda_handler(event, context):
+    records = event['Records']
+    match_list = []
 
-    matches = scrape_matches()
-    insert(table, matches)
+    for record in records:
+        body = json.loads(record['body'])
+        page = str(body['page'])
+
+        matches = scrape_matches(page)
+        match_list.extend(matches)
+
+    insert(table, match_list)
 
     return {
-        'matches_count': len(matches)
+        'matches_count': len(match_list)
     }
