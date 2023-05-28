@@ -1,13 +1,18 @@
+import os
 import random
 import re
 import time
 from datetime import datetime
 
+import boto3
 import requests
 from dateutil import tz
 from dateutil.parser import parse
 from selectolax.parser import HTMLParser
 from utils import headers
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(os.environ['VLR_MATCHES_TABLE'])
 
 # vlr match events cache
 vlr_events_cache = {}
@@ -22,6 +27,16 @@ def get_event_from_cache(event_url_path):
         result = vlr_events_cache[event_url_path]
 
     return result
+
+
+def insert(table, matches):
+    '''
+    put items into specified DynamoDB table.
+    '''
+    with table.batch_writer() as batch:
+        for match in matches:
+            # logger.info('put match info into the table: {}'.format(match))
+            batch.put_item({k: v for k, v in match.items()})
 
 
 def sleep():
@@ -42,7 +57,7 @@ def scrape_event(event_url_path):
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
 
-    event_id = event_url_path.split('/')[2]
+    event_id = int(event_url_path.split('/')[2])
 
     event_name = html.css_first('.wf-title').text().strip()
     event_name = event_name.replace('\t', '').replace('\n', '')
@@ -73,7 +88,7 @@ def scrape_match(match_url_path):
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
 
-    match_id = match_url_path.split('/')[1]
+    match_id = int(match_url_path.split('/')[1])
 
     match_name = html.css_first('.match-header-event-series').text()
     match_name = match_name.replace('\t', '').replace('\n', '')
@@ -147,4 +162,8 @@ def scrape_matches(page: str = 1):
 def lambda_handler(event, context):
 
     matches = scrape_matches()
-    return matches
+    insert(table, matches)
+
+    return {
+        'matches_count': len(matches)
+    }
