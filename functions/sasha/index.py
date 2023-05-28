@@ -9,6 +9,20 @@ from dateutil.parser import parse
 from selectolax.parser import HTMLParser
 from utils import headers
 
+# vlr match events cache
+vlr_events_cache = {}
+
+
+def get_event_from_cache(event_url_path):
+    global vlr_events_cache
+
+    result = ''
+
+    if event_url_path in vlr_events_cache:
+        result = vlr_events_cache[event_url_path]
+
+    return result
+
 
 def sleep():
     '''
@@ -17,13 +31,13 @@ def sleep():
     sec = random.randint(1, 10)
     time.sleep(sec)
 
-# TODO: Cache in scrape_match()
-
 
 def scrape_event(event_url_path):
     '''
     scrape event page of url_path
     '''
+    global vlr_events_cache
+
     url = 'https://www.vlr.gg{}'.format(event_url_path)
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
@@ -43,6 +57,9 @@ def scrape_event(event_url_path):
         'country_flag': country_flag
     }
 
+    # caching
+    vlr_events_cache[event_url_path] = data
+
     return data
 
 
@@ -50,6 +67,8 @@ def scrape_match(match_url_path):
     '''
     scrape match page of url_path
     '''
+    global vlr_events_cache
+
     url = 'https://www.vlr.gg{}'.format(match_url_path)
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
@@ -75,7 +94,11 @@ def scrape_match(match_url_path):
     best_of = best_of.replace('Bo', '').replace('\t', '').replace('\n', '')
 
     event_url_path = html.css_first('a.match-header-event').attributes['href']
-    event_info = scrape_event(event_url_path)
+
+    if event_url_path in vlr_events_cache:
+        event_info = vlr_events_cache[event_url_path]
+    else:
+        event_info = scrape_event(event_url_path)
 
     data = {
         'match_id': match_id,
