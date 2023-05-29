@@ -16,7 +16,6 @@
     "eventName": "Champions Tour 2023: EMEA League",
     "matchName": "Playoffs: Grand Final",
     "match_page": "/213198/fnatic-vs-team-liquid-champions-tour-2023-emea-league-gf",
-    "startDate": "2023-05-28",
     "teams": [
         {
             "title": "FNATIC"
