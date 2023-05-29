@@ -17,11 +17,10 @@ def publish_page_numbers():
     '''
 
     pages_to_scrape = int(os.environ['PAGES_TO_SCRAPE'])
-    pages = [page for page in range(pages_to_scrape)]
 
     base_delay_seconds = int(os.environ['BASE_DELAY_SECONDS'])
-    for i, page in zip(range(pages_to_scrape), pages):
-        logger.info('request to fetch match list for the day: {}'.format(page))
+    for page in range(1, pages_to_scrape+1):
+        logger.info('request to fetch match list in the page: {}'.format(page))
 
         payload = {'page': page}
         message = json.dumps(payload)
@@ -29,7 +28,7 @@ def publish_page_numbers():
         response = sqs.send_message(
             QueueUrl=queue_url,
             MessageBody=message,
-            DelaySeconds=min(i*base_delay_seconds, 900)
+            DelaySeconds=min(page*base_delay_seconds, 900)
         )
 
         logger.info('message sent. queue: {} response: {}'.format(
