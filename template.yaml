@@ -112,7 +112,7 @@ Resources:
 
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
-    # DeletionPolicy: Retain
+    DeletionPolicy: Retain
     Properties: 
       AttributeDefinitions: 
         - AttributeName: id
@@ -120,7 +120,7 @@ Resources:
         - AttributeName: startTime
           AttributeType: S
       BillingMode: PROVISIONED
-      # DeletionProtectionEnabled: True
+      DeletionProtectionEnabled: True
       KeySchema: 
         - AttributeName: id
           KeyType: HASH
