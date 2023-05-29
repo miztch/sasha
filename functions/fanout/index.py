@@ -20,7 +20,7 @@ def publish_page_numbers():
 
     base_delay_seconds = int(os.environ['BASE_DELAY_SECONDS'])
     for page in range(1, pages_to_scrape+1):
-        logger.info('request to fetch match list for the day: {}'.format(page))
+        logger.info('request to fetch match list in the page: {}'.format(page))
 
         payload = {'page': page}
         message = json.dumps(payload)
