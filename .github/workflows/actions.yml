@@ -1,0 +1,51 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+      - name: Setup AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Prepare SAM parameters
+        env:
+          SCHEDULE_EXPRESSION: ${{ vars.SCHEDULE_EXPRESSION }}
+          DAYS_TO_RETAIN_LOGS: ${{ vars.DAYS_TO_RETAIN_LOGS }}
+        run: |
+          tee params.json << EOF
+          {
+            "ScheduleExpression": "${SCHEDULE_EXPRESSION}",
+            "DaysToRetainLogs": "${DAYS_TO_RETAIN_LOGS}"
+          }
+          EOF
+      - name: Build SAM packages
+        run: sam build --use-container
+      - name: Deploy SAM application
+        env:
+          BUCKET_NAME: ${{ secrets.PROVISIONING_BUCKET_NAME }}
+          REGION: ${{ secrets.AWS_REGION }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          sam deploy \
+            --template-file .aws-sam/build/template.yaml \
+            --stack-name $STACK_NAME \
+            --s3-bucket $BUCKET_NAME \
+            --s3-prefix $STACK_NAME \
+            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+            --region $REGION \
+            --force-upload \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides "$(jq -j 'to_entries[] | "\(.key)='\\\"'\(.value)'\\\"''\ '"' params.json)"
