@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import re
@@ -12,11 +13,32 @@ from dateutil.parser import parse
 from selectolax.parser import HTMLParser
 from utils import headers
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['VLR_MATCHES_TABLE'])
 
 # vlr match events cache
 vlr_events_cache = {}
+
+
+def insert(table, matches):
+    '''
+    put items into specified DynamoDB table.
+    '''
+    with table.batch_writer() as batch:
+        for match in matches:
+            logger.info('put match info into the table: {}'.format(match))
+            batch.put_item({k: v for k, v in match.items()})
+
+
+def sleep():
+    '''
+    sleep for 1~10 secs (randomly)
+    '''
+    sec = random.randint(1, 10)
+    time.sleep(sec)
 
 
 def get_event_from_cache(event_url_path):
@@ -30,24 +52,6 @@ def get_event_from_cache(event_url_path):
     return result
 
 
-def insert(table, matches):
-    '''
-    put items into specified DynamoDB table.
-    '''
-    with table.batch_writer() as batch:
-        for match in matches:
-            # logger.info('put match info into the table: {}'.format(match))
-            batch.put_item({k: v for k, v in match.items()})
-
-
-def sleep():
-    '''
-    sleep for 1~10 secs (randomly)
-    '''
-    sec = random.randint(1, 10)
-    time.sleep(sec)
-
-
 def scrape_event(event_url_path):
     '''
     scrape event page of url_path
@@ -55,6 +59,8 @@ def scrape_event(event_url_path):
     global vlr_events_cache
 
     url = 'https://www.vlr.gg{}'.format(event_url_path)
+    logger.info('get event info: {}'.format(url))
+
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
 
@@ -86,6 +92,8 @@ def scrape_match(match_url_path):
     global vlr_events_cache
 
     url = 'https://www.vlr.gg{}'.format(match_url_path)
+    logger.info('get match info: {}'.format(url))
+
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
 
@@ -112,8 +120,10 @@ def scrape_match(match_url_path):
     event_url_path = html.css_first('a.match-header-event').attributes['href']
 
     if event_url_path in vlr_events_cache:
+        logger.info('get event info from cache: {}'.format(event_url_path))
         event_info = vlr_events_cache[event_url_path]
     else:
+        logger.info('get event info from website: {}'.format(event_url_path))
         event_info = scrape_event(event_url_path)
 
     data = {
@@ -133,6 +143,8 @@ def scrape_matches(page: str = 1):
     scrape /matches page
     '''
     url = 'https://www.vlr.gg/matches?page={}'.format(page)
+    logger.info('fetch matches list from: {}'.format(url))
+
     resp = requests.get(url, headers=headers)
     html = HTMLParser(resp.text)
 
@@ -144,18 +156,18 @@ def scrape_matches(page: str = 1):
         sleep()
         match_detail = scrape_match(match_url_path)
 
-        matches.append(
-            {
-                'id': match_detail['match_id'],
-                'eventName': match_detail['event_name'],
-                'eventCountryFlag': match_detail['event_country_flag'],
-                'startTime': match_detail['start_time'],
-                'bestOf': match_detail['best_of'],
-                'matchName': match_detail['match_name'],
-                'teams': [{'title': team} for team in match_detail['teams']],
-                'match_page': match_url_path
-            }
-        )
+        item = {
+            'id': match_detail['match_id'],
+            'eventName': match_detail['event_name'],
+            'eventCountryFlag': match_detail['event_country_flag'],
+            'startTime': match_detail['start_time'],
+            'bestOf': match_detail['best_of'],
+            'matchName': match_detail['match_name'],
+            'teams': [{'title': team} for team in match_detail['teams']],
+            'match_page': match_url_path
+        }
+        logger.info('add match to the list: {}'.format(item))
+        matches.append(item)
 
     return matches
 
