@@ -115,7 +115,9 @@ def scrape_match(match_url_path):
     teams = [t.text().replace('\t', '').replace('\n', '') for t in teams]
 
     best_of = html.css('.match-header-vs-note')[-1].text()
-    best_of = best_of.replace('Bo', '').replace('\t', '').replace('\n', '')
+    best_of = best_of.replace('Bo', '').replace(' Maps', '')
+    best_of = best_of.replace('\t', '').replace('\n', '')
+    best_of = int(best_of)
 
     event_url_path = html.css_first('a.match-header-event').attributes['href']
 
