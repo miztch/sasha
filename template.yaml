@@ -117,15 +117,11 @@ Resources:
       AttributeDefinitions: 
         - AttributeName: id
           AttributeType: N
-        - AttributeName: startTime
-          AttributeType: S
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
       KeySchema: 
         - AttributeName: id
           KeyType: HASH
-        - AttributeName: startTime
-          KeyType: RANGE
       ProvisionedThroughput: 
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
