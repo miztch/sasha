@@ -166,7 +166,7 @@ def scrape_matches(page: str = 1):
             'bestOf': match_detail['best_of'],
             'matchName': match_detail['match_name'],
             'teams': [{'title': team} for team in match_detail['teams']],
-            'match_page': match_url_path
+            'pagePath': match_url_path
         }
         logger.info('add match to the list: {}'.format(item))
         matches.append(item)
