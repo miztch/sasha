@@ -6,7 +6,7 @@ Parameters:
   ScheduleExpression:
     Description: schedule expression for the eventbridge event
     Type: String
-    Default: rate(6 hours)
+    Default: rate(3 hours)
   DaysToRetainLogs:
     Description: days to retain logs in CloudWatch
     Type: Number
