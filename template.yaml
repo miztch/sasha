@@ -14,7 +14,7 @@ Parameters:
   PagesToScrape:
     Description: pages to scrape matches
     Type: Number
-    Default: 5
+    Default: 3
   BaseDelaySecondsOfSendMessage:
     Description: the delay to use as a basis for the sqs.send_message
     Type: Number
