@@ -6,7 +6,7 @@ Parameters:
   ScheduleExpression:
     Description: schedule expression for the eventbridge event
     Type: String
-    Default: rate(6 hours)
+    Default: rate(3 hours)
   DaysToRetainLogs:
     Description: days to retain logs in CloudWatch
     Type: Number
@@ -14,7 +14,7 @@ Parameters:
   PagesToScrape:
     Description: pages to scrape matches
     Type: Number
-    Default: 5
+    Default: 3
   BaseDelaySecondsOfSendMessage:
     Description: the delay to use as a basis for the sqs.send_message
     Type: Number
