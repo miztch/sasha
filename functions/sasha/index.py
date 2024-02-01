@@ -176,8 +176,6 @@ def lambda_handler(event, context):
     page = str(event["page"])
 
     matches = scrape_matches(page)
-    match_list.extend(matches)
-
     insert(table, matches)
 
     return {"matches_count": len(matches)}
