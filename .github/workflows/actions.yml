@@ -28,17 +28,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
           mask-aws-account-id: true
-      - name: Prepare SAM parameters
-        env:
-          SCHEDULE_EXPRESSION: ${{ vars.SCHEDULE_EXPRESSION }}
-          DAYS_TO_RETAIN_LOGS: ${{ vars.DAYS_TO_RETAIN_LOGS }}
-        run: |
-          tee params.json << EOF
-          {
-            "ScheduleExpression": "${SCHEDULE_EXPRESSION}",
-            "DaysToRetainLogs": "${DAYS_TO_RETAIN_LOGS}"
-          }
-          EOF
       - name: Build SAM packages
         run: sam build --use-container
       - name: Deploy SAM application
@@ -56,5 +45,4 @@ jobs:
             --region $REGION \
             --force-upload \
             --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --parameter-overrides "$(jq -j 'to_entries[] | "\(.key)='\\\"'\(.value)'\\\"''\ '"' params.json)"
+            --no-fail-on-empty-changeset
