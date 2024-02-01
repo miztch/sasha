@@ -16,7 +16,7 @@ Parameters:
   PagesToScrape:
     Description: pages to scrape matches
     Type: Number
-    Default: 3
+    Default: 6
   MaxConcurrency:
     Description: concurrency of scrape pages
     Type: Number
