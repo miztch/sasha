@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: "AWS::Serverless-2016-10-31"
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
 Description: sasha
 
 Parameters:
@@ -15,12 +17,39 @@ Parameters:
     Description: pages to scrape matches
     Type: Number
     Default: 3
-  BaseDelaySecondsOfSendMessage:
-    Description: the delay to use as a basis for the sqs.send_message
+  MaxConcurrency:
+    Description: concurrency of scrape pages
     Type: Number
-    Default: 60
+    Default: 1
+  # ScrapingIntervalSeconds:
+  #   Description: interval seconds to start scraping the next page
+  #   Type: Number
+  #   Default: 900
 
 Resources:
+  SashaStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/scraping.asl.json
+      DefinitionSubstitutions:
+        PagesToScrape: !Ref PagesToScrape
+        # ScrapingIntervalSeconds: !Ref ScrapingIntervalSeconds
+        SashaFunctionArn: !GetAtt SashaFunction.Arn
+      # Logging:
+      #   Destinations:
+      #     - CloudWatchLogsLogGroup:
+      #         LogGroupArn: !Sub /aws/states/${StateMachine.Name}-Logs:*
+      #   IncludeExecutionData: true
+      #   Level: ALL
+      Policies:
+        LambdaInvokePolicy:
+          FunctionName: !Ref SashaFunction
+      Events:
+        Scheduler:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+
   RequestsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -74,44 +103,6 @@ Resources:
         - !Ref RequestsLayer
         - !Ref SelectolaxLayer
         - !Ref PythonDateutilLayer
-      Events:
-        MySQSEvent:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt FanoutQueue.Arn
-            BatchSize: 1
-            ScalingConfig:
-              MaximumConcurrency: 2
-
-  FanoutFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/fanout/
-      Description: "invoke sasha function via SQS queue publishing"
-      Handler: index.lambda_handler
-      Runtime: python3.11
-      Architectures:
-        - x86_64
-      MemorySize: 128
-      Timeout: 900
-      Policies:
-        - AmazonSQSFullAccess
-      Environment:
-        Variables:
-          FANOUT_QUEUE_URL: !Ref FanoutQueue
-          BASE_DELAY_SECONDS: !Ref BaseDelaySecondsOfSendMessage
-          PAGES_TO_SCRAPE: !Ref PagesToScrape
-      Events:
-        CloudWatchEvent:
-          Type: Schedule
-          Properties:
-            Schedule: !Ref ScheduleExpression
-
-  FanoutQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      DelaySeconds: 10
-      VisibilityTimeout: 1000
 
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
@@ -129,10 +120,10 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
-  FanoutFunctionLogGroup:
+  StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${FanoutFunction}
+      LogGroupName: !Sub /aws/states/${StateMachine.Name}
       RetentionInDays: !Ref DaysToRetainLogs
 
   SashaFunctionLogGroup:

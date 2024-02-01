@@ -173,16 +173,11 @@ def scrape_matches(page: str = 1):
 
 
 def lambda_handler(event, context):
-    records = event["Records"]
-    match_list = []
+    page = str(event["page"])
 
-    for record in records:
-        body = json.loads(record["body"])
-        page = str(body["page"])
+    matches = scrape_matches(page)
+    match_list.extend(matches)
 
-        matches = scrape_matches(page)
-        match_list.extend(matches)
+    insert(table, matches)
 
-    insert(table, match_list)
-
-    return {"matches_count": len(match_list)}
+    return {"matches_count": len(matches)}
