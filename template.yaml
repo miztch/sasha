@@ -123,7 +123,7 @@ Resources:
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/states/${StateMachine.Name}
+      LogGroupName: !Sub /aws/states/${SashaStateMachine.Name}
       RetentionInDays: !Ref DaysToRetainLogs
 
   SashaFunctionLogGroup:
