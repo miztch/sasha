@@ -28,8 +28,9 @@ Resources:
       ContentUri: layer/requests/
       CompatibleRuntimes:
         - python3.11
+        - python3.12
     Metadata:
-      BuildMethod: python3.11
+      BuildMethod: python3.12
 
   SelectolaxLayer:
     Type: AWS::Serverless::LayerVersion
@@ -38,8 +39,9 @@ Resources:
       ContentUri: layer/selectolax/
       CompatibleRuntimes:
         - python3.11
+        - python3.12
     Metadata:
-      BuildMethod: python3.11
+      BuildMethod: python3.12
 
   PythonDateutilLayer:
     Type: AWS::Serverless::LayerVersion
@@ -48,8 +50,9 @@ Resources:
       ContentUri: layer/python-dateutil/
       CompatibleRuntimes:
         - python3.11
+        - python3.12
     Metadata:
-      BuildMethod: python3.11
+      BuildMethod: python3.12
 
   SashaFunction:
     Type: AWS::Serverless::Function
@@ -57,7 +60,7 @@ Resources:
       CodeUri: functions/sasha/
       Description: "scrape vlr.gg upcoming matches"
       Handler: index.lambda_handler
-      Runtime: python3.11
+      Runtime: python3.12
       Architectures:
         - x86_64
       MemorySize: 128
