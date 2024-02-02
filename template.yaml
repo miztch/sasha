@@ -115,6 +115,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties: 
+      TableName: !Sub ${ApplicationName}-vlr-matches
       AttributeDefinitions: 
         - AttributeName: id
           AttributeType: N
