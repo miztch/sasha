@@ -46,9 +46,7 @@ Resources:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
         IncludeExecutionData: true
         Level: ALL
-      Policies:
-        LambdaInvokePolicy:
-          FunctionName: !Ref SashaFunction
+      Role: !GetAtt StepFunctionRole.Arn
       Events:
         Schedule:
           Type: ScheduleV2
@@ -140,6 +138,47 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${SashaFunction}
       RetentionInDays: !Ref DaysToRetainLogs
+
+  StepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ApplicationName}-stepfunctions-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+
+  StepFunctionsLoggingPolicy:
+    Type: AWS::IAM::RolePolicy
+    Properties:
+      PolicyName: !Sub ${ApplicationName}-stepfunctions-policy
+      RoleName: !Ref StepFunctionRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: !Sub "${SashaFunction.Arn}*"
+        - Effect: Allow
+          Action:
+          - logs:CreateLogDelivery
+          - logs:CreateLogStream
+          - logs:GetLogDelivery
+          - logs:UpdateLogDelivery
+          - logs:DeleteLogDelivery
+          - logs:ListLogDeliveries
+          - logs:PutLogEvents
+          - logs:PutResourcePolicy
+          - logs:DescribeResourcePolicies
+          - logs:DescribeLogGroups
+          Resource: "*"
 
 Outputs:
   VlrMatchesTableName:
