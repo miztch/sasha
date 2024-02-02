@@ -5,6 +5,10 @@ Transform:
 Description: sasha
 
 Parameters:
+  ApplicationName:
+    Description: resource prefix
+    Type: String
+    Default: sasha
   ScheduleExpression:
     Description: schedule expression for the eventbridge event
     Type: String
@@ -30,6 +34,7 @@ Resources:
   SashaStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
+      Name: !Sub ${ApplicationName}-state-machine
       DefinitionUri: statemachine/scraping.asl.json
       DefinitionSubstitutions:
         PagesToScrape: !Ref PagesToScrape
@@ -48,12 +53,13 @@ Resources:
         Scheduler:
           Type: Schedule
           Properties:
+            RuleName: !Sub ${ApplicationName}-state-machine-scheduler
             Schedule: !Ref ScheduleExpression
 
   RequestsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-requests
+      LayerName: !Sub ${ApplicationName}-requests
       ContentUri: layer/requests/
       CompatibleRuntimes:
         - python3.11
@@ -64,7 +70,7 @@ Resources:
   SelectolaxLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-selectolax
+      LayerName: !Sub ${ApplicationName}-selectolax
       ContentUri: layer/selectolax/
       CompatibleRuntimes:
         - python3.11
@@ -75,7 +81,7 @@ Resources:
   PythonDateutilLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-python-dateutil
+      LayerName: !Sub ${ApplicationName}-python-dateutil
       ContentUri: layer/python-dateutil/
       CompatibleRuntimes:
         - python3.11
@@ -86,6 +92,7 @@ Resources:
   SashaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${ApplicationName}-scraper
       CodeUri: functions/sasha/
       Description: "scrape vlr.gg upcoming matches"
       Handler: index.lambda_handler
@@ -107,6 +114,7 @@ Resources:
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
+    TableName: !Sub ${ApplicationName}-vlr-matches
     Properties: 
       AttributeDefinitions: 
         - AttributeName: id
@@ -123,7 +131,7 @@ Resources:
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/states/${SashaStateMachine.Name}
+      LogGroupName: !Sub /aws/states/${ApplicationName}-state-machine
       RetentionInDays: !Ref DaysToRetainLogs
 
   SashaFunctionLogGroup:
