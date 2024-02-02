@@ -50,11 +50,11 @@ Resources:
         LambdaInvokePolicy:
           FunctionName: !Ref SashaFunction
       Events:
-        Scheduler:
-          Type: Schedule
+        Schedule:
+          Type: ScheduleV2
           Properties:
-            RuleName: !Sub ${ApplicationName}-state-machine-scheduler
-            Schedule: !Ref ScheduleExpression
+            Name: !Sub ${ApplicationName}-state-machine-scheduler
+            ScheduleExpression: !Ref ScheduleExpression
 
   RequestsLayer:
     Type: AWS::Serverless::LayerVersion
