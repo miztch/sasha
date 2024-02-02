@@ -40,12 +40,12 @@ Resources:
         PagesToScrape: !Ref PagesToScrape
         # ScrapingIntervalSeconds: !Ref ScrapingIntervalSeconds
         SashaFunctionArn: !GetAtt SashaFunction.Arn
-      # Logging:
-      #   Destinations:
-      #     - CloudWatchLogsLogGroup:
-      #         LogGroupArn: !Sub /aws/states/${StateMachine.Name}-Logs:*
-      #   IncludeExecutionData: true
-      #   Level: ALL
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !Sub /aws/states/${ApplicationName}-state-machine:*
+        IncludeExecutionData: true
+        Level: ALL
       Policies:
         LambdaInvokePolicy:
           FunctionName: !Ref SashaFunction
