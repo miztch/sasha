@@ -43,7 +43,7 @@ jobs:
             --stack-name $STACK_NAME \
             --s3-bucket $BUCKET_NAME \
             --s3-prefix $STACK_NAME \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
             --region $REGION \
             --force-upload \
             --no-confirm-changeset \
