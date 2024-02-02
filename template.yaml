@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform:
   - AWS::LanguageExtensions
   - AWS::Serverless-2016-10-31
@@ -114,17 +114,17 @@ Resources:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
-    Properties: 
+    Properties:
       TableName: !Sub ${ApplicationName}-vlr-matches
-      AttributeDefinitions: 
+      AttributeDefinitions:
         - AttributeName: id
           AttributeType: N
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
-      KeySchema: 
+      KeySchema:
         - AttributeName: id
           KeyType: HASH
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
@@ -152,8 +152,7 @@ Resources:
               Service:
                 - states.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
-
+              - "sts:AssumeRole"
 
   StepFunctionsLoggingPolicy:
     Type: AWS::IAM::RolePolicy
@@ -161,25 +160,25 @@ Resources:
       PolicyName: !Sub ${ApplicationName}-stepfunctions-policy
       RoleName: !Ref StepFunctionRole
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
-        - Effect: Allow
-          Action:
-          - lambda:InvokeFunction
-          Resource: !Sub "${SashaFunction.Arn}*"
-        - Effect: Allow
-          Action:
-          - logs:CreateLogDelivery
-          - logs:CreateLogStream
-          - logs:GetLogDelivery
-          - logs:UpdateLogDelivery
-          - logs:DeleteLogDelivery
-          - logs:ListLogDeliveries
-          - logs:PutLogEvents
-          - logs:PutResourcePolicy
-          - logs:DescribeResourcePolicies
-          - logs:DescribeLogGroups
-          Resource: "*"
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !Sub "${SashaFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogDelivery
+              - logs:CreateLogStream
+              - logs:GetLogDelivery
+              - logs:UpdateLogDelivery
+              - logs:DeleteLogDelivery
+              - logs:ListLogDeliveries
+              - logs:PutLogEvents
+              - logs:PutResourcePolicy
+              - logs:DescribeResourcePolicies
+              - logs:DescribeLogGroups
+            Resource: "*"
 
 Outputs:
   VlrMatchesTableName:
