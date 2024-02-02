@@ -113,7 +113,7 @@ Resources:
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
-    TableName: !Sub ${ApplicationName}-vlr-matches
+    UpdateReplacePolicy: Retain
     Properties: 
       AttributeDefinitions: 
         - AttributeName: id
