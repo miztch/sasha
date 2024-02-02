@@ -1,10 +1,14 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform:
   - AWS::LanguageExtensions
   - AWS::Serverless-2016-10-31
 Description: sasha
 
 Parameters:
+  ApplicationName:
+    Description: resource prefix
+    Type: String
+    Default: sasha
   ScheduleExpression:
     Description: schedule expression for the eventbridge event
     Type: String
@@ -30,30 +34,30 @@ Resources:
   SashaStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
+      Name: !Sub ${ApplicationName}-state-machine
       DefinitionUri: statemachine/scraping.asl.json
       DefinitionSubstitutions:
         PagesToScrape: !Ref PagesToScrape
         # ScrapingIntervalSeconds: !Ref ScrapingIntervalSeconds
         SashaFunctionArn: !GetAtt SashaFunction.Arn
-      # Logging:
-      #   Destinations:
-      #     - CloudWatchLogsLogGroup:
-      #         LogGroupArn: !Sub /aws/states/${StateMachine.Name}-Logs:*
-      #   IncludeExecutionData: true
-      #   Level: ALL
-      Policies:
-        LambdaInvokePolicy:
-          FunctionName: !Ref SashaFunction
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      Role: !GetAtt StepFunctionRole.Arn
       Events:
-        Scheduler:
-          Type: Schedule
+        Schedule:
+          Type: ScheduleV2
           Properties:
-            Schedule: !Ref ScheduleExpression
+            Name: !Sub ${ApplicationName}-state-machine-scheduler
+            ScheduleExpression: !Ref ScheduleExpression
 
   RequestsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-requests
+      LayerName: !Sub ${ApplicationName}-requests
       ContentUri: layer/requests/
       CompatibleRuntimes:
         - python3.11
@@ -64,7 +68,7 @@ Resources:
   SelectolaxLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-selectolax
+      LayerName: !Sub ${ApplicationName}-selectolax
       ContentUri: layer/selectolax/
       CompatibleRuntimes:
         - python3.11
@@ -75,7 +79,7 @@ Resources:
   PythonDateutilLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: sasha-python-dateutil
+      LayerName: !Sub ${ApplicationName}-python-dateutil
       ContentUri: layer/python-dateutil/
       CompatibleRuntimes:
         - python3.11
@@ -86,6 +90,7 @@ Resources:
   SashaFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${ApplicationName}-scraper
       CodeUri: functions/sasha/
       Description: "scrape vlr.gg upcoming matches"
       Handler: index.lambda_handler
@@ -95,7 +100,8 @@ Resources:
       MemorySize: 128
       Timeout: 900
       Policies:
-        - AmazonDynamoDBFullAccess
+        DynamoDBCrudPolicy:
+          TableName: !Ref VlrMatchesTable
       Environment:
         Variables:
           VLR_MATCHES_TABLE: !Ref VlrMatchesTable
@@ -107,23 +113,25 @@ Resources:
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
-    Properties: 
-      AttributeDefinitions: 
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub ${ApplicationName}-vlr-matches
+      AttributeDefinitions:
         - AttributeName: id
           AttributeType: N
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
-      KeySchema: 
+      KeySchema:
         - AttributeName: id
           KeyType: HASH
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/states/${SashaStateMachine.Name}
+      LogGroupName: !Sub /aws/states/${ApplicationName}-state-machine
       RetentionInDays: !Ref DaysToRetainLogs
 
   SashaFunctionLogGroup:
@@ -131,6 +139,46 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${SashaFunction}
       RetentionInDays: !Ref DaysToRetainLogs
+
+  StepFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ApplicationName}-stepfunctions-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+
+  StepFunctionsLoggingPolicy:
+    Type: AWS::IAM::RolePolicy
+    Properties:
+      PolicyName: !Sub ${ApplicationName}-stepfunctions-policy
+      RoleName: !Ref StepFunctionRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !Sub "${SashaFunction.Arn}*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogDelivery
+              - logs:CreateLogStream
+              - logs:GetLogDelivery
+              - logs:UpdateLogDelivery
+              - logs:DeleteLogDelivery
+              - logs:ListLogDeliveries
+              - logs:PutLogEvents
+              - logs:PutResourcePolicy
+              - logs:DescribeResourcePolicies
+              - logs:DescribeLogGroups
+            Resource: "*"
 
 Outputs:
   VlrMatchesTableName:
