@@ -43,7 +43,7 @@ Resources:
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
-              LogGroupArn: !Sub /aws/states/${ApplicationName}-state-machine:*
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
         IncludeExecutionData: true
         Level: ALL
       Policies:
