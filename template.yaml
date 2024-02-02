@@ -102,7 +102,8 @@ Resources:
       MemorySize: 128
       Timeout: 900
       Policies:
-        - AmazonDynamoDBFullAccess
+        DynamoDBCrudPolicy:
+          TableName: !Ref VlrMatchesTable
       Environment:
         Variables:
           VLR_MATCHES_TABLE: !Ref VlrMatchesTable
