@@ -31,7 +31,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           mask-aws-account-id: true
       - name: Build SAM packages
-        run: sam build --use-container
+        run: sam build --use-container --parallel
       - name: Deploy SAM application
         env:
           BUCKET_NAME: ${{ secrets.PROVISIONING_BUCKET_NAME }}
