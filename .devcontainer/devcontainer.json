@@ -10,7 +10,8 @@
             "extensions": [
                 "amazonwebservices.aws-toolkit-vscode",
                 "ms-python.black-formatter",
-                "ms-python.isort"
+                "ms-python.isort",
+                "kddejong.vscode-cfn-lint"
             ],
             "settings": {
                 "terminal.integrated.shell.linux": "/usr/bin/zsh",
@@ -27,5 +28,6 @@
     },
     "mounts": [
         "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
-    ]
+    ],
+    "postCreateCommand": "pip install cfn-lint"
 }

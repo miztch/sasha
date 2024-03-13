@@ -153,21 +153,27 @@ def scrape_matches(page: str = 1):
     for item in html.css("a.wf-module-item"):
         match_url_path = item.attributes["href"]
 
-        sleep()
-        match_detail = scrape_match(match_url_path)
+        try:
+            sleep()
+            match_detail = scrape_match(match_url_path)
 
-        item = {
-            "id": match_detail["match_id"],
-            "eventName": match_detail["event_name"],
-            "eventCountryFlag": match_detail["event_country_flag"],
-            "startTime": match_detail["start_time"],
-            "bestOf": match_detail["best_of"],
-            "matchName": match_detail["match_name"],
-            "teams": [{"title": team} for team in match_detail["teams"]],
-            "pagePath": match_url_path,
-        }
-        logger.info("add match to the list: {}".format(item))
-        matches.append(item)
+            item = {
+                "id": match_detail["match_id"],
+                "eventName": match_detail["event_name"],
+                "eventCountryFlag": match_detail["event_country_flag"],
+                "startTime": match_detail["start_time"],
+                "bestOf": match_detail["best_of"],
+                "matchName": match_detail["match_name"],
+                "teams": [{"title": team} for team in match_detail["teams"]],
+                "pagePath": match_url_path,
+            }
+            logger.info("add match to the list: {}".format(item))
+            matches.append(item)
+        except Exception as err:
+            logger.exception(
+                "Could not get match info successfully. url: %s", match_url_path
+            )
+            continue
 
     return matches
 
