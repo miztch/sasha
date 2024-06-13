@@ -119,11 +119,15 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: N
+        - AttributeName: startDate
+          AttributeType: S
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+        - AttributeName: startDate
+          KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
