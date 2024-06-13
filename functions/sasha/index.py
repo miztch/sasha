@@ -105,10 +105,10 @@ def scrape_match(match_url_path):
     with_timezone = " ".join([start_time, "EST"])
 
     tzinfo = {"EST": tz.gettz("America/New_York"), "CST": tz.gettz("America/Chicago")}
-    start_time_est = parse(with_timezone, tzinfos=tzinfo)
-    start_time_utc = start_time_est.astimezone(tz.gettz("Etc/GMT"))
-    start_time_utc = datetime.strftime(start_time_utc, "%Y-%m-%dT%H:%M:%S%z")
-    start_date_utc = datetime.strftime(start_time_utc, "%Y-%m-%d")
+    dt_start_time_est = parse(with_timezone, tzinfos=tzinfo)
+    dt_start_time_utc = dt_start_time_est.astimezone(tz.gettz("Etc/GMT"))
+    start_time_utc = datetime.strftime(dt_start_time_utc, "%Y-%m-%dT%H:%M:%S%z")
+    start_date_utc = datetime.strftime(dt_start_time_utc, "%Y-%m-%d")
 
     teams = html.css(".wf-title-med")
     teams = [t.text().replace("\t", "").replace("\n", "") for t in teams]
