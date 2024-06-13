@@ -117,16 +117,16 @@ Resources:
     Properties:
       TableName: !Sub ${ApplicationName}-vlr-matches
       AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: N
         - AttributeName: startDate
           AttributeType: S
+        - AttributeName: id
+          AttributeType: N
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
       KeySchema:
-        - AttributeName: id
-          KeyType: HASH
         - AttributeName: startDate
+          KeyType: HASH
+        - AttributeName: id
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 1
