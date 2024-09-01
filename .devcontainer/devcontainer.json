@@ -1,7 +1,10 @@
 {
-    "name": "Python 3",
-    "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
+    "name": "Go Dev Container",
+    "image": "mcr.microsoft.com/devcontainers/go:1-1.21-bullseye",
     "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "latest"
+        },
         "ghcr.io/devcontainers/features/aws-cli:1": {},
         "ghcr.io/customink/codespaces-features/sam-cli:1": {}
     },
@@ -9,20 +12,20 @@
         "vscode": {
             "extensions": [
                 "amazonwebservices.aws-toolkit-vscode",
-                "ms-python.black-formatter",
-                "ms-python.isort",
-                "kddejong.vscode-cfn-lint"
+                "esbenp.prettier-vscode",
+                "github.vscode-github-actions",
+                "redhat.vscode-yaml",
+                "ms-vscode.makefile-tools",
+                "kddejong.vscode-cfn-lint",
+                "oderwat.indent-rainbow",
+                "github.copilot",
+                "github.copilot-chat"
             ],
             "settings": {
                 "terminal.integrated.shell.linux": "/usr/bin/zsh",
-                "[python]": {
-                    "editor.formatOnSave": true,
-                    "editor.defaultFormatter": "ms-python.black-formatter"
-                },
-                "isort.args": [
-                    "--profile",
-                    "black"
-                ]
+                "[yaml]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                }
             }
         }
     },

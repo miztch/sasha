@@ -54,47 +54,16 @@ Resources:
             Name: !Sub ${ApplicationName}-state-machine-scheduler
             ScheduleExpression: !Ref ScheduleExpression
 
-  RequestsLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: !Sub ${ApplicationName}-requests
-      ContentUri: layer/requests/
-      CompatibleRuntimes:
-        - python3.11
-        - python3.12
-    Metadata:
-      BuildMethod: python3.12
-
-  SelectolaxLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: !Sub ${ApplicationName}-selectolax
-      ContentUri: layer/selectolax/
-      CompatibleRuntimes:
-        - python3.11
-        - python3.12
-    Metadata:
-      BuildMethod: python3.12
-
-  PythonDateutilLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: !Sub ${ApplicationName}-python-dateutil
-      ContentUri: layer/python-dateutil/
-      CompatibleRuntimes:
-        - python3.11
-        - python3.12
-    Metadata:
-      BuildMethod: python3.12
-
   SashaFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
     Properties:
       FunctionName: !Sub ${ApplicationName}-scraper
-      CodeUri: functions/sasha/
+      CodeUri: .
       Description: "scrape vlr.gg upcoming matches"
-      Handler: index.lambda_handler
-      Runtime: python3.12
+      Handler: bootstrap
+      Runtime: provided.al2023
       Architectures:
         - x86_64
       MemorySize: 128
@@ -104,11 +73,8 @@ Resources:
           TableName: !Ref VlrMatchesTable
       Environment:
         Variables:
+          OUTPUT_MODE: dynamodb
           VLR_MATCHES_TABLE: !Ref VlrMatchesTable
-      Layers:
-        - !Ref RequestsLayer
-        - !Ref SelectolaxLayer
-        - !Ref PythonDateutilLayer
 
   VlrMatchesTable:
     Type: AWS::DynamoDB::Table
