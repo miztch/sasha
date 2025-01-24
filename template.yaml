@@ -70,33 +70,45 @@ Resources:
       Timeout: 900
       Policies:
         DynamoDBCrudPolicy:
-          TableName: !Ref VlrMatchesTable
+          TableName: !Ref MatchesTable
       Environment:
         Variables:
           OUTPUT_MODE: dynamodb
-          VLR_MATCHES_TABLE: !Ref VlrMatchesTable
+          VLR_MATCHES_TABLE: !Ref MatchesTable
 
-  VlrMatchesTable:
+  MatchesTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub ${ApplicationName}-vlr-matches
+      TableName: !Sub ${ApplicationName}-vlrgg-matches
       AttributeDefinitions:
-        - AttributeName: startDate
-          AttributeType: S
         - AttributeName: id
           AttributeType: N
+        - AttributeName: startDate
+          AttributeType: S
       BillingMode: PROVISIONED
       DeletionProtectionEnabled: True
       KeySchema:
-        - AttributeName: startDate
-          KeyType: HASH
         - AttributeName: id
+          KeyType: HASH
+        - AttributeName: startDate
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        - IndexName: startDate-id-index
+          KeySchema:
+            - AttributeName: startDate
+              KeyType: HASH
+            - AttributeName: id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
@@ -151,6 +163,6 @@ Resources:
             Resource: "*"
 
 Outputs:
-  VlrMatchesTableName:
+  MatchesTableName:
     Description: DynamoDB Table for match list
-    Value: !Ref VlrMatchesTable
+    Value: !Ref MatchesTable
